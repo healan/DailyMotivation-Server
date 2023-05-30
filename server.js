@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { text } from 'express';
 import { translate } from '@vitalets/google-translate-api';
 import cors from 'cors';
 
@@ -12,32 +12,61 @@ app.use(cors({
   origin: '*'
 })); 
 
-const option = 'zh';
 
-if(option === 'ko'){
-    const { text }  = await translate('Remember that the best relationship is one in which your love for each other exceeds your need for each other', { to: 'ko' });
-    console.log(10, text);
-}else if(option === 'zh'){
-    const { text } = await translate('Remember that the best relationship is one in which your love for each other exceeds your need for each other', { to: 'zh' });
-    console.log(12, text);
+// var Promise = require('promise');
+
+const translateQuote = (option, author, quote) => {
+    // const option = 'ko';
+
+    const translatePromise = new Promise((resolve, reject) => {
+        if(option === 'ko'){
+            translate(quote, { to: 'ko' })
+                    .then(({text})=>{
+                        console.log(23, text);
+                        resolve(text);
+                    })
+                    .catch((err)=>{console.log(29, err)})
+
+        }else if(option === 'zh'){
+            translate(quote, { to: 'zh' })
+                    .then(({text})=>{
+                        resolve(text);
+                    })
+                    .catch((err)=>{console.log(35, err)})
+
+        };
+    });
+
+    return translatePromise
 };
+
 
 app.get('/test', (req, res) => {
     console.log(16, req);
     res.send('ok');
 });
 
-app.post('/quote/translate/', (req, res)=>{
-    console.log(17, req.body);
+app.post('/quote/translate/', (req, res) => {
 
-    // return res.status(200).json({
-    //     code: 200,
-    //     text: 'text'
-    // })
+    let author = req.body.author;
+    let quote = req.body.quote;
+    let option = req.body.option;
+    let text;
+
+    console.log(48, author, quote, option);
+
+    translateQuote(option, author, quote)
+        .then((res)=>{
+            console.log(60, res);
+            text = res;
+        })
+        .catch((err)=>{console.log(62, err)});
+
     res.send({
         code :200,
-        text: 'text'
-    })
+        text: text
+    });
+    
 });
 
 app.listen(2900, function () {
